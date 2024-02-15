@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"testing"
 
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -21,7 +22,9 @@ const (
 	dbRootPassword = "db-root-password"
 )
 
-func SetupMysqL(ctx context.Context) (*MysqlDBContainer, error) {
+func SetupMysqL(t testing.TB) *MysqlDBContainer {
+	t.Helper()
+	ctx := context.TODO()
 	req := testcontainers.ContainerRequest{
 		Image:        "mariadb:11.3.1-rc-jammy",
 		ExposedPorts: []string{"3306/tcp"},
@@ -38,23 +41,27 @@ func SetupMysqL(ctx context.Context) (*MysqlDBContainer, error) {
 		Started:          true,
 	})
 	if err != nil {
-		return nil, err
+		t.Errorf("error creating container %s", err.Error())
 	}
 	mappedPort, err := container.MappedPort(ctx, "3306")
 	if err != nil {
-		return nil, err
+		t.Errorf("error getting container port %s", err.Error())
 	}
 
 	hostIP, err := container.Host(ctx)
 	if err != nil {
-		return nil, err
+		t.Errorf("error getting container host address %s", err.Error())
 	}
 	uri := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", "root", dbRootPassword, hostIP, mappedPort.Port(), database)
+	t.Cleanup(func() {
+		container.Terminate(ctx)
+	})
 
-	return &MysqlDBContainer{Container: container, URI: uri}, nil
+	return &MysqlDBContainer{Container: container, URI: uri}
 }
 
-func InitMySQL(ctx context.Context, db *sql.DB) error {
+func InitMySQL(t testing.TB, db *sql.DB) {
+	ctx := context.TODO()
 	query := []string{
 		fmt.Sprintf("use %s;", database),
 		"create table if not exists person (id int AUTO_INCREMENT,first_name varchar(100), last_name varchar(100), created_at datetime, updated_at datetime, PRIMARY KEY (`id`)) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;",
@@ -62,23 +69,7 @@ func InitMySQL(ctx context.Context, db *sql.DB) error {
 	for _, q := range query {
 		_, err := db.ExecContext(ctx, q)
 		if err != nil {
-			return err
+			t.Errorf("error executing create query %s", err.Error())
 		}
 	}
-
-	return nil
-}
-
-func TruncateMySQL(ctx context.Context, db *sql.DB) error {
-	query := []string{
-		fmt.Sprintf("use %s;", database),
-		"truncate table person",
-	}
-	for _, q := range query {
-		_, err := db.ExecContext(ctx, q)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }

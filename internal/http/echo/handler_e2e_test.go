@@ -3,7 +3,6 @@
 package echo_test
 
 import (
-	"context"
 	"database/sql"
 	"net/http"
 	"net/http/httptest"
@@ -18,22 +17,13 @@ import (
 
 func TestGetUserE2E(t *testing.T) {
 	// fase: Configure os dados de teste
-	ctx := context.Background()
-	container, err := person.SetupMysqL(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer container.Terminate(ctx)
+	container := person.SetupMysqL(t)
 	db, err := sql.Open("mysql", container.URI)
 	if err != nil {
 		t.Error(err)
 	}
 	defer db.Close()
-	err = person.InitMySQL(ctx, db)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer person.TruncateMySQL(ctx, db)
+	person.InitMySQL(t, db)
 
 	repo := mysql.NewMySQL(db)
 	service := person.NewService(repo)
