@@ -1,0 +1,16 @@
+version: "3"
+services:
+  mysql:
+    image: mariadb:latest
+    command: --default-authentication-plugin=mysql_native_password --init-file /data/application/init.sql
+    volumes:
+      - ./ops/db/init.sql:/data/application/init.sql
+    environment:
+      MYSQL_ROOT_PASSWORD: db-root-password
+      MYSQL_DATABASE: workshop
+      MYSQL_USER: workshop
+      MYSQL_PASSWORD: workshop
+    ports:
+      - "3306:3306"
+    container_name: go-test-workshop-mysql
+    network_mode: "bridge"
