@@ -3,7 +3,6 @@
 package mysql_test
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
 	"testing"
@@ -15,22 +14,13 @@ import (
 )
 
 func TestCRUD(t *testing.T) {
-	ctx := context.Background()
-	container, err := person.SetupMysqL(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer container.Terminate(ctx)
+	container := person.SetupMysqL(t)
 	db, err := sql.Open("mysql", container.URI)
 	if err != nil {
 		t.Error(err)
 	}
 	defer db.Close()
-	err = person.InitMySQL(ctx, db)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer person.TruncateMySQL(ctx, db)
+	person.InitMySQL(t, db)
 
 	repo := mysql.NewMySQL(db)
 
@@ -80,22 +70,13 @@ func TestCRUD(t *testing.T) {
 }
 
 func TestSearch(t *testing.T) {
-	ctx := context.Background()
-	container, err := person.SetupMysqL(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer container.Terminate(ctx)
+	container := person.SetupMysqL(t)
 	db, err := sql.Open("mysql", container.URI)
 	if err != nil {
 		t.Error(err)
 	}
 	defer db.Close()
-	err = person.InitMySQL(ctx, db)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer person.TruncateMySQL(ctx, db)
+	person.InitMySQL(t, db)
 
 	repo := mysql.NewMySQL(db)
 
