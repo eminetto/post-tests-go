@@ -61,6 +61,7 @@ func SetupMysqL(t testing.TB) *MysqlDBContainer {
 }
 
 func InitMySQL(t testing.TB, db *sql.DB) {
+	t.Helper()
 	ctx := context.TODO()
 	query := []string{
 		fmt.Sprintf("use %s;", database),
